@@ -1,0 +1,204 @@
+---
+title: "Chapter 3 — Simple Linear Regression"
+author: ""
+output: html_document
+---
+# Linear Regression
+
+## 🌿 Simple Linear Regression
+
+### 🎯 Goal
+Model how a **response variable** \(y\) changes as a **predictor variable** \(x\) changes.  
+We fit a line that best describes this relationship:
+
+\[
+y_i = \beta_0 + \beta_1 x_i + \epsilon_i
+\]
+
+- \( \beta_0 \): Intercept — expected \(y\) when \(x = 0\)  
+- \( \beta_1 \): Slope — expected change in \(y\) for a one-unit change in \(x\)  
+- \( \epsilon_i \): Random error, assumed \( \sim N(0,\sigma^2) \)
+
+---
+
+### 💡 The Line of Best Fit
+
+We want to minimize the **Sum of Squared Errors (SSE):**
+
+\[
+SSE = \sum (y_i - \hat{y}_i)^2
+\]
+
+The line that gives the smallest SSE is our **best-fit line**.  
+Squaring residuals keeps all distances positive and emphasizes large errors.
+
+---
+
+### ✏️ Example — Study Hours vs. Exam Scores
+
+```{r}
+# Sample data
+hours <- c(2, 4, 6, 8, 10)
+scores <- c(65, 70, 75, 85, 90)
+
+# Fit the simple linear regression
+model <- lm(scores ~ hours)
+
+summary(model)
+```
+## 🌸 Multiple Linear Regression
+
+So far, we’ve dealt with **simple regression**, which uses just one predictor.  
+Now, we extend this to **multiple regression**, where we can include many predictors to explain a response variable \( y \).
+
+---
+
+### 🎯 Purpose
+
+To model how a **response variable** \( y \) depends on **two or more predictors** \( x_1, x_2, \dots, x_p \).
+
+\[
+y_i = \beta_0 + \beta_1 x_{1i} + \beta_2 x_{2i} + \cdots + \beta_p x_{pi} + \epsilon_i
+\]
+
+- \( \beta_0 \): intercept  
+- \( \beta_j \): slope for predictor \( x_j \)  
+- \( \epsilon_i \): random error, assumed \( \sim N(0, \sigma^2) \)
+
+---
+
+### 🧮 Matrix Form (the compact version!)
+
+We can express this model using **linear algebra**:
+
+\[
+\mathbf{y} = \mathbf{X}\boldsymbol{\beta} + \boldsymbol{\epsilon}
+\]
+
+where:
+
+- \( \mathbf{y} \) is an \( n \times 1 \) vector of responses  
+- \( \mathbf{X} \) is an \( n \times (p + 1) \) matrix of predictors (including a column of 1’s for the intercept)  
+- \( \boldsymbol{\beta} \) is a \( (p + 1) \times 1 \) vector of coefficients  
+- \( \boldsymbol{\epsilon} \sim N(0, \sigma^2 I_n) \)
+
+---
+
+### ✏️ Example — Predicting Exam Scores
+
+Let’s extend our earlier example.  
+Now suppose exam score depends on **hours studied** and **hours slept** the night before.
+
+```{r}
+# Example data
+hours_study <- c(2, 4, 6, 8, 10)
+hours_sleep <- c(5, 6, 7, 6, 8)
+exam_score  <- c(65, 70, 75, 85, 90)
+
+# Combine predictors into a data frame
+data <- data.frame(hours_study, hours_sleep, exam_score)
+
+# Fit multiple regression model
+model_multi <- lm(exam_score ~ hours_study + hours_sleep, data = data)
+
+summary(model_multi)
+```
+
+## 🌿 Variance Decomposition (ANOVA & R²)
+
+### 🎯 Goal
+Measure how *good* our regression model is **on an absolute scale**,  
+not just whether it’s “better” than another model.
+
+We know that Least Squares finds the “line of best fit” by minimizing:
+\[
+SSE = \sum (y_i - \hat{y}_i)^2
+\]
+But **how good** is that line?  
+Variance decomposition gives us a way to evaluate that.
+
+---
+
+### 💡 Motivation
+
+Metrics like **RMSE** or **MAE** tell us the *size* of prediction errors,  
+but they depend on the scale of the data (e.g., an RMSE of 5 means something different for scores vs. salaries).  
+
+We want something **unitless** — a metric that tells us how much of the variation in \(y\) the model explains.
+
+---
+
+### 📊 The ANOVA “Triangle”
+
+The total variation in the response variable \(y\) can be broken into two parts:
+1. Variation **explained by the model** (the fitted values)
+2. Variation **unexplained** (the residuals)
+
+Mathematically:
+
+\[
+y_i - \bar{y} = (\hat{y}_i - \bar{y}) + (y_i - \hat{y}_i)
+\]
+
+Squaring both sides and summing over all observations gives:
+
+\[
+SST = SSR + SSE
+\]
+
+| Symbol | Meaning | Formula |
+|:--|:--|:--|
+| **SST** | Total Sum of Squares | \( \sum (y_i - \bar{y})^2 \) |
+| **SSR** | Regression (Model) Sum of Squares | \( \sum (\hat{y}_i - \bar{y})^2 \) |
+| **SSE** | Error (Residual) Sum of Squares | \( \sum (y_i - \hat{y}_i)^2 \) |
+
+---
+
+### 🧭 Geometric Interpretation
+
+In vector form, the fitted values \(\hat{\mathbf{y}}\) and the residuals \(\mathbf{e}\) are **orthogonal** — at right angles in vector space:
+
+\[
+\mathbf{y} = \hat{\mathbf{y}} + \mathbf{e}
+\]
+\[
+||\mathbf{y}||^2 = ||\hat{\mathbf{y}}||^2 + ||\mathbf{e}||^2
+\]
+
+This orthogonality forms the **ANOVA triangle**, linking total, explained, and residual variation.
+
+---
+
+### 🧮 Computing R²
+
+The **coefficient of determination** \(R^2\) tells us what fraction of the total variance in \(y\) is explained by the model:
+
+\[
+R^2 = 1 - \frac{SSE}{SST} = \frac{SSR}{SST}
+\]
+
+It always lies between 0 and 1:
+- \(R^2 = 0\): model explains none of the variance  
+- \(R^2 = 1\): model explains all variance (often overfit)
+
+---
+
+### ✏️ Example — Study Hours vs Exam Scores
+
+```{r}
+# Example dataset
+hours <- c(2, 4, 6, 8, 10)
+scores <- c(65, 70, 75, 85, 90)
+
+model <- lm(scores ~ hours)
+summary(model)
+
+# Manually compute SST, SSR, SSE, and R2
+y <- scores
+yhat <- fitted(model)
+SST <- sum((y - mean(y))^2)
+SSE <- sum((y - yhat)^2)
+SSR <- sum((yhat - mean(y))^2)
+R2  <- 1 - SSE/SST
+c(SST = SST, SSR = SSR, SSE = SSE, R2 = R2)
+```
